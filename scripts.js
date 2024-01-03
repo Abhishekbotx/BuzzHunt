@@ -1,5 +1,5 @@
 const API_KEY = "48d77d22405b4c53a23e157f028246f8";
-const url = "https://newsapi.org/v2/everything?q=";
+const url = "https://newsapi.org/v2/top-headlines";
 
 window.addEventListener("load", () => fetchNews("India"));
 
@@ -8,21 +8,38 @@ function reload() {
 }
 
 async function fetchNews(query) {
-    const res = await fetch(`${url}${query}&apiKey=${API_KEY}`);
-    const data = await res.json();
-    bindData(data.articles);
+    try {
+        const country = query.toLowerCase();
+        const res = await fetch(`${url}?country=${country}&apiKey=${API_KEY}`);
+
+        if (!res.ok) {
+            throw new Error(`Failed to fetch news: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        bindData(data.articles);
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 function bindData(articles) {
+    console.log("Received articles:", articles);
+
     const cardsContainer = document.getElementById("cards-container");
     const newsCardTemplate = document.getElementById("template-news-card");
 
     cardsContainer.innerHTML = "";
 
     articles.forEach((article) => {
-        if (!article.urlToImage) return;
+        console.log("Processing article:", article);
+
+        if (!article.urlToImage) {
+            console.log("Skipping article without image.");
+            return;
+        }
+
         const cardClone = newsCardTemplate.content.cloneNode(true);
-// newsCardtemplate ke andar jitne div hai ya element haai sb clone ho jaynge/ i.e, deepclone
         fillDataInCard(cardClone, article);
         cardsContainer.appendChild(cardClone);
     });
@@ -46,7 +63,6 @@ function fillDataInCard(cardClone, article) {
 
     cardClone.firstElementChild.addEventListener("click", () => {
         window.open(article.url, "_blank");
-        //_blank mtlab new tab
     });
 }
 
